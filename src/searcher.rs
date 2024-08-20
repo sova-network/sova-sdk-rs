@@ -5,7 +5,7 @@ use crate::proto;
 
 use crate::proto::auth::Token;
 use crate::proto::searcher::searcher_service_client::SearcherServiceClient;
-use crate::proto::searcher::{AddressSubscriptionV0, EventSubscriptionV0, GetTipAddressesRequest, GetTipAddressesResponse, MempoolSubscription, SendBundleResponse};
+use crate::proto::searcher::{AddressSubscriptionV0, GetTipAddressesRequest, GetTipAddressesResponse, MempoolSubscription, SendBundleResponse};
 
 pub struct MevtonSearcher {
     searcher_client: SearcherServiceClient<Channel>,
@@ -29,7 +29,6 @@ impl MevtonSearcher {
     pub async fn subscribe_mempool<F>(
         &mut self,
         addresses: Vec<String>,
-        events: Vec<String>,
         on_data: F,
     ) -> Result<(), Box<dyn std::error::Error>>
         where
@@ -37,7 +36,6 @@ impl MevtonSearcher {
     {
         let mut request = tonic::Request::new(MempoolSubscription {
             addresses: if !addresses.is_empty() { Some(AddressSubscriptionV0 { address: addresses }) } else { None },
-            events: if !events.is_empty() { Some(EventSubscriptionV0 { event: events }) } else { None },
         });
 
         if let Some(access_token) = &self.access_token {
