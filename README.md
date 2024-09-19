@@ -1,6 +1,6 @@
 # Mevton SDK
 
-Mevton SDK is a Rust library for interacting with the Mevton MEV Block Engine and Searcher services. 
+Mevton SDK is a Rust library for interacting with the Mevton MEV Block Engine and Searcher services.
 It provides functionalities for authentication, streaming mempool transactions, subscribing to bundles, and sending bundles.
 
 ## Features
@@ -16,7 +16,7 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-mevton_rs = { git = "https://github.com/mevton-labs/meton-sdk-rs" }
+mevton_rs = { git = "https://github.com/mevton-labs/mevton-sdk-rs" }
 ```
 
 ## Contributing
