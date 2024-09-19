@@ -1,17 +1,24 @@
 use tonic::transport::Channel;
-
-use fastcrypto::traits::{KeyPair, ToFromBytes};
-use fastcrypto::ed25519::Ed25519KeyPair;
-use fastcrypto::traits::Signer;
+use k256::ecdsa::{SigningKey, VerifyingKey};
+use k256::{
+    ecdsa::{Signature, signature::Signer},
+    SecretKey,
+};
 
 use crate::error::MevtonError;
 use crate::proto::auth::Token;
 use crate::proto::auth::auth_service_client::AuthServiceClient;
 use crate::proto::auth::{GenerateAuthChallengeRequest, GenerateAuthTokensRequest, RefreshAccessTokenRequest};
 
+pub struct NewKeyPair {
+    private_key: SigningKey,
+    public_key: VerifyingKey,
+}
+
+
 pub struct MevtonAuth {
     auth_client: AuthServiceClient<Channel>,
-    key: Ed25519KeyPair,
+    key: NewKeyPair,
     access_token: Option<Token>,
     refresh_token: Option<Token>
 }
@@ -19,7 +26,10 @@ pub struct MevtonAuth {
 impl MevtonAuth {
     pub async fn new(auth_url: &str, private_key: &[u8; 32]) -> Result<Self, Box<dyn std::error::Error>> {
         let auth_client = AuthServiceClient::connect(auth_url.to_string()).await?;
-        let key = Ed25519KeyPair::from_bytes(private_key)?;
+
+        let private_key = SigningKey::from_slice(private_key).map_err(|e|  Box::new(e))?;
+        let public_key = VerifyingKey::from(&private_key);
+        let key = NewKeyPair{private_key,public_key};
 
         Ok(Self {
             auth_client,
@@ -30,18 +40,20 @@ impl MevtonAuth {
     }
 
     pub async fn authenticate(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        let bytes_public_key: &[u8] = &self.key.public_key.to_sec1_bytes();
+
         let request = tonic::Request::new(GenerateAuthChallengeRequest {
-            pubkey: Vec::from(self.key.public().as_bytes()),
+            pubkey: Vec::from(bytes_public_key),
         });
-
         let response = self.auth_client.generate_auth_challenge(request).await?;
-        let challenge = response.into_inner().challenge;
 
-        let signed_challenge = self.key.sign(&challenge);
+
+        let challenge = response.into_inner().challenge;
+        let signed_challenge: Signature = self.key.private_key.sign(&challenge);
 
         let token_request = tonic::Request::new(GenerateAuthTokensRequest {
             challenge,
-            signed_challenge: Vec::from(signed_challenge.sig.to_bytes()),
+            signed_challenge: signed_challenge.to_vec(),
         });
 
         let token_response = self.auth_client.generate_auth_tokens(token_request).await?.into_inner();
