@@ -26,13 +26,11 @@ impl MevtonSearcher {
         self.access_token = Some(token);
     }
 
-    pub async fn subscribe_mempool<F>(
+    pub async fn subscribe_mempool(
         &mut self,
         addresses: Vec<String>,
-        on_data: F,
+        on_data: impl Fn(proto::dto::MempoolPacket) + Send + 'static,
     ) -> Result<(), Box<dyn std::error::Error>>
-        where
-            F: Fn(proto::dto::MempoolPacket) + Send + 'static,
     {
         let mut request = tonic::Request::new(MempoolSubscription {
             addresses: if !addresses.is_empty() { Some(AddressSubscriptionV0 { address: addresses }) } else { None },
