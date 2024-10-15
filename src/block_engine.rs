@@ -25,7 +25,7 @@ impl MevtonBlockEngine {
         })
     }
 
-    pub async fn stream_mempool<F>(
+    pub async fn stream_mempool(
         &mut self,
         stream: impl Stream<Item = MempoolPacket> + Send + 'static
     ) -> Result<(), Box<dyn std::error::Error>> {
