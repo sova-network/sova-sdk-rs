@@ -1,5 +1,5 @@
 use std::str::FromStr;
-use tonic::transport::Channel;
+use tonic::transport::{Certificate, Channel, ClientTlsConfig};
 
 use crate::proto;
 
@@ -13,8 +13,23 @@ pub struct MevtonSearcher {
 }
 
 impl MevtonSearcher {
-    pub async fn new(searcher_url: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        let searcher_client = SearcherServiceClient::connect(searcher_url.to_string()).await?;
+    pub async fn new(url: &'static str, ca_pem: Option<&str>, domain_name: Option<&str>) -> Result<Self, Box<dyn std::error::Error>> {
+        let searcher_client = if let (Some(ca_pem), Some(domain_name)) = (ca_pem, domain_name) {
+            let ca = Certificate::from_pem(ca_pem);
+
+            let tls = ClientTlsConfig::new()
+                .ca_certificate(ca)
+                .domain_name(domain_name);
+
+            let channel = Channel::from_static(url)
+                .tls_config(tls)?
+                .connect()
+                .await?;
+
+            SearcherServiceClient::new(channel)
+        } else {
+            SearcherServiceClient::connect(url).await?
+        };
 
         Ok(Self {
             searcher_client,

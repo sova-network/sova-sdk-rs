@@ -1,8 +1,7 @@
-use tonic::transport::Channel;
+use tonic::transport::{Certificate, Channel, ClientTlsConfig};
 use k256::ecdsa::{SigningKey, VerifyingKey};
 use k256::{
     ecdsa::{Signature, signature::Signer},
-    SecretKey,
 };
 
 use crate::error::MevtonError;
@@ -15,7 +14,6 @@ pub struct NewKeyPair {
     public_key: VerifyingKey,
 }
 
-
 pub struct MevtonAuth {
     auth_client: AuthServiceClient<Channel>,
     key: NewKeyPair,
@@ -24,8 +22,23 @@ pub struct MevtonAuth {
 }
 
 impl MevtonAuth {
-    pub async fn new(auth_url: &str, private_key: &[u8; 32]) -> Result<Self, Box<dyn std::error::Error>> {
-        let auth_client = AuthServiceClient::connect(auth_url.to_string()).await?;
+    pub async fn new(url: &'static str, ca_pem: Option<&str>, domain_name: Option<&str>, private_key: &[u8; 32]) -> Result<Self, Box<dyn std::error::Error>> {
+        let auth_client = if let (Some(ca_pem), Some(domain_name)) = (ca_pem, domain_name) {
+            let ca = Certificate::from_pem(ca_pem);
+
+            let tls = ClientTlsConfig::new()
+                .ca_certificate(ca)
+                .domain_name(domain_name);
+
+            let channel = Channel::from_static(url)
+                .tls_config(tls)?
+                .connect()
+                .await?;
+
+            AuthServiceClient::new(channel)
+        } else {
+            AuthServiceClient::connect(url).await?
+        };
 
         let private_key = SigningKey::from_slice(private_key).map_err(|e|  Box::new(e))?;
         let public_key = VerifyingKey::from(&private_key);
