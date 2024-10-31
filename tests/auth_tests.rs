@@ -76,7 +76,7 @@ async fn test_authenticate() -> Result<(), Box<dyn std::error::Error>> {
     // A dummy key, replace with real one for actual tests
 
     // Create MevtonAuth instance
-    let mut auth = MevtonAuth::new("http://[::1]:50051",&private_key_bytes).await?;
+    let mut auth = MevtonAuth::new("http://[::1]:50051", None, None, &private_key_bytes).await?;
 
     // Test authenticate function
     auth.authenticate().await?;

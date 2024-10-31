@@ -5,7 +5,7 @@ use crate::proto;
 
 use crate::proto::auth::Token;
 use crate::proto::searcher::searcher_service_client::SearcherServiceClient;
-use crate::proto::searcher::{AddressSubscriptionV0, GetTipAddressesRequest, GetTipAddressesResponse, MempoolSubscription, SendBundleResponse};
+use crate::proto::searcher::{mempool_subscription, AddressSubscriptionV0, ExternalOutMessageBodyOpcodeSubscriptionV0, GetTipAddressesRequest, GetTipAddressesResponse, InternalMessageBodyOpcodeSubscriptionV0, MempoolSubscription, SendBundleResponse, WorkchainShardSubscriptionV0, WorkchainSubscriptionV0};
 
 pub struct MevtonSearcher {
     searcher_client: SearcherServiceClient<Channel>,
@@ -41,16 +41,16 @@ impl MevtonSearcher {
         self.access_token = Some(token);
     }
 
-    pub async fn subscribe_mempool<F>(
+    pub async fn subscribe<F>(
         &mut self,
-        addresses: Vec<String>,
+        subscription: mempool_subscription::Subscription,
         on_data: F,
     ) -> Result<(), Box<dyn std::error::Error>>
-        where
-            F: Fn(proto::dto::MempoolPacket) + Send + 'static,
+    where
+        F: Fn(proto::dto::MempoolPacket) + Send + 'static,
     {
         let mut request = tonic::Request::new(MempoolSubscription {
-            addresses: if !addresses.is_empty() { Some(AddressSubscriptionV0 { address: addresses }) } else { None },
+            subscription: Some(subscription)
         });
 
         if let Some(access_token) = &self.access_token {
@@ -71,6 +71,102 @@ impl MevtonSearcher {
         });
 
         Ok(())
+    }
+
+    pub async fn subscribe_by_addresses<F>(
+        &mut self,
+        addresses: Vec<String>,
+        on_data: F,
+    ) -> Result<(), Box<dyn std::error::Error>>
+        where
+            F: Fn(proto::dto::MempoolPacket) + Send + 'static,
+    {
+        self.subscribe(
+            mempool_subscription::Subscription::Addresses(
+                AddressSubscriptionV0 { address: addresses }
+            ),
+            on_data
+        ).await
+    }
+
+    pub async fn subscribe_by_workchain<F>(
+        &mut self,
+        workchain_id: i32,
+        on_data: F,
+    ) -> Result<(), Box<dyn std::error::Error>>
+    where
+        F: Fn(proto::dto::MempoolPacket) + Send + 'static,
+    {
+        self.subscribe(
+            mempool_subscription::Subscription::Workchain(
+                WorkchainSubscriptionV0 { workchain_id }
+            ),
+            on_data
+        ).await
+    }
+
+    pub async fn subscribe_by_workchain_shard<F>(
+        &mut self,
+        workchain_id: i32,
+        shard: Vec<u8>,
+        on_data: F,
+    ) -> Result<(), Box<dyn std::error::Error>>
+    where
+        F: Fn(proto::dto::MempoolPacket) + Send + 'static,
+    {
+        self.subscribe(
+            mempool_subscription::Subscription::WorkchainShard(
+                WorkchainShardSubscriptionV0 {
+                    workchain_id,
+                    shard
+                }
+            ),
+            on_data
+        ).await
+    }
+
+    pub async fn subscribe_by_external_out_msg_body_opcode<F>(
+        &mut self,
+        workchain_id: i32,
+        shard: Option<Vec<u8>>,
+        opcode: i32,
+        on_data: F,
+    ) -> Result<(), Box<dyn std::error::Error>>
+    where
+        F: Fn(proto::dto::MempoolPacket) + Send + 'static,
+    {
+        self.subscribe(
+            mempool_subscription::Subscription::ExternalOutMessageBodyOpcode(
+                ExternalOutMessageBodyOpcodeSubscriptionV0 {
+                    workchain_id,
+                    shard,
+                    opcode
+                }
+            ),
+            on_data
+        ).await
+    }
+
+    pub async fn subscribe_by_internal_msg_body_opcode<F>(
+        &mut self,
+        workchain_id: i32,
+        shard: Option<Vec<u8>>,
+        opcode: i32,
+        on_data: F,
+    ) -> Result<(), Box<dyn std::error::Error>>
+    where
+        F: Fn(proto::dto::MempoolPacket) + Send + 'static,
+    {
+        self.subscribe(
+            mempool_subscription::Subscription::InternalMessageBodyOpcode(
+                InternalMessageBodyOpcodeSubscriptionV0 {
+                    workchain_id,
+                    shard,
+                    opcode
+                }
+            ),
+            on_data
+        ).await
     }
 
     pub async fn send_bundle(&mut self, bundle: proto::dto::Bundle) -> Result<SendBundleResponse, Box<dyn std::error::Error>> {
