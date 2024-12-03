@@ -1,13 +1,13 @@
-use tonic::transport::{Certificate, Channel, ClientTlsConfig};
+use k256::ecdsa::{signature::Signer, Signature};
 use k256::ecdsa::{SigningKey, VerifyingKey};
-use k256::{
-    ecdsa::{Signature, signature::Signer},
-};
+use tonic::transport::{Certificate, Channel, ClientTlsConfig};
 
 use crate::error::MevtonError;
-use crate::proto::auth::Token;
 use crate::proto::auth::auth_service_client::AuthServiceClient;
-use crate::proto::auth::{GenerateAuthChallengeRequest, GenerateAuthTokensRequest, RefreshAccessTokenRequest};
+use crate::proto::auth::Token;
+use crate::proto::auth::{
+    GenerateAuthChallengeRequest, GenerateAuthTokensRequest, RefreshAccessTokenRequest,
+};
 
 pub struct NewKeyPair {
     private_key: SigningKey,
@@ -18,11 +18,16 @@ pub struct MevtonAuth {
     auth_client: AuthServiceClient<Channel>,
     key: NewKeyPair,
     access_token: Option<Token>,
-    refresh_token: Option<Token>
+    refresh_token: Option<Token>,
 }
 
 impl MevtonAuth {
-    pub async fn new(url: &'static str, ca_pem: Option<&str>, domain_name: Option<&str>, private_key: &[u8; 32]) -> Result<Self, Box<dyn std::error::Error>> {
+    pub async fn new(
+        url: &'static str,
+        ca_pem: Option<&str>,
+        domain_name: Option<&str>,
+        private_key: &[u8; 32],
+    ) -> Result<Self, Box<dyn std::error::Error>> {
         let auth_client = if let (Some(ca_pem), Some(domain_name)) = (ca_pem, domain_name) {
             let ca = Certificate::from_pem(ca_pem);
 
@@ -30,25 +35,25 @@ impl MevtonAuth {
                 .ca_certificate(ca)
                 .domain_name(domain_name);
 
-            let channel = Channel::from_static(url)
-                .tls_config(tls)?
-                .connect()
-                .await?;
+            let channel = Channel::from_static(url).tls_config(tls)?.connect().await?;
 
             AuthServiceClient::new(channel)
         } else {
             AuthServiceClient::connect(url).await?
         };
 
-        let private_key = SigningKey::from_slice(private_key).map_err(|e|  Box::new(e))?;
+        let private_key = SigningKey::from_slice(private_key).map_err(Box::new)?;
         let public_key = VerifyingKey::from(&private_key);
-        let key = NewKeyPair{private_key,public_key};
+        let key = NewKeyPair {
+            private_key,
+            public_key,
+        };
 
         Ok(Self {
             auth_client,
             key,
             access_token: None,
-            refresh_token: None
+            refresh_token: None,
         })
     }
 
@@ -60,7 +65,6 @@ impl MevtonAuth {
         });
         let response = self.auth_client.generate_auth_challenge(request).await?;
 
-
         let challenge = response.into_inner().challenge;
         let signed_challenge: Signature = self.key.private_key.sign(&challenge);
 
@@ -69,7 +73,11 @@ impl MevtonAuth {
             signed_challenge: signed_challenge.to_vec(),
         });
 
-        let token_response = self.auth_client.generate_auth_tokens(token_request).await?.into_inner();
+        let token_response = self
+            .auth_client
+            .generate_auth_tokens(token_request)
+            .await?
+            .into_inner();
         self.access_token = token_response.access_token;
         self.refresh_token = token_response.refresh_token;
 
@@ -85,10 +93,10 @@ impl MevtonAuth {
             let response = self.auth_client.refresh_access_token(request).await?;
             self.access_token = response.into_inner().access_token;
 
-            return Ok(())
+            return Ok(());
         }
 
-        return Err(Box::from(MevtonError::AuthenticationRequired));
+        Err(Box::from(MevtonError::AuthenticationRequired))
     }
 
     pub fn access_token(&self) -> Option<Token> {

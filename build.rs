@@ -1,6 +1,15 @@
 fn main() {
-    tonic_build::compile_protos("grpc/proto/auth.proto").unwrap();
-    tonic_build::compile_protos("grpc/proto/searcher.proto").unwrap();
-    tonic_build::compile_protos("grpc/proto/dto.proto").unwrap();
-    tonic_build::compile_protos("grpc/proto/block_engine.proto").unwrap();
+    let protbuf_files = [
+        "auth.proto",
+        "searcher.proto",
+        "dto.proto",
+        "block_engine.proto",
+    ];
+
+    tonic_build::configure()
+        // The `optional` keyword in this message requires compiling the .proto file with 
+        // the `--experimental_allow_proto3_optional` flag (see https://github.com/hyperium/tonic/issues/627)
+        .protoc_arg("--experimental_allow_proto3_optional")
+        .compile(&protbuf_files, &["grpc/proto"])
+        .expect("Failed to compile protobuf files");
 }

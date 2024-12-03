@@ -1,13 +1,14 @@
-use k256::ecdsa::SigningKey;
-use tonic::{Response, Status};
+use tonic::Response;
 
+use mevton_rs::auth::MevtonAuth;
+use mevton_rs::proto::auth::auth_service_server::{AuthService, AuthServiceServer};
+use mevton_rs::proto::auth::{
+    GenerateAuthChallengeRequest, GenerateAuthChallengeResponse, GenerateAuthTokensRequest,
+    GenerateAuthTokensResponse, RefreshAccessTokenRequest, RefreshAccessTokenResponse, Token,
+};
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 use tonic::transport::Server;
-use mevton_rs::auth::MevtonAuth;
-use mevton_rs::proto::auth::{GenerateAuthChallengeRequest, GenerateAuthChallengeResponse, GenerateAuthTokensRequest, GenerateAuthTokensResponse, RefreshAccessTokenRequest, RefreshAccessTokenResponse, Token};
-use mevton_rs::proto::auth::auth_service_server::{AuthService, AuthServiceServer};
-
 
 #[tokio::test]
 async fn test_authenticate() -> Result<(), Box<dyn std::error::Error>> {
@@ -63,16 +64,21 @@ async fn test_authenticate() -> Result<(), Box<dyn std::error::Error>> {
         // Notify that the server is starting
         tx.send(()).await.unwrap();
         // Start the server (this will block until the server is shut down)
-        Server::builder().add_service(svc).serve(addr).await.unwrap();
+        Server::builder()
+            .add_service(svc)
+            .serve(addr)
+            .await
+            .unwrap();
     });
 
     // Wait for the server to start
     rx.recv().await;
 
-
-
     // Private key for testing
-    let private_key_bytes: [u8; 32] = [155, 202, 118, 43, 82, 100, 113, 150, 99, 21, 45, 230, 88, 247, 193, 12, 92, 78, 191, 229, 73, 191, 100, 156, 231, 41, 144, 54, 202, 199, 75, 1];
+    let private_key_bytes: [u8; 32] = [
+        155, 202, 118, 43, 82, 100, 113, 150, 99, 21, 45, 230, 88, 247, 193, 12, 92, 78, 191, 229,
+        73, 191, 100, 156, 231, 41, 144, 54, 202, 199, 75, 1,
+    ];
     // A dummy key, replace with real one for actual tests
 
     // Create MevtonAuth instance
