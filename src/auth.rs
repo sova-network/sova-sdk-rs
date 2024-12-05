@@ -1,5 +1,4 @@
-use k256::ecdsa::{signature::Signer, Signature};
-use k256::ecdsa::{SigningKey, VerifyingKey};
+use ed25519_dalek::{Signature, Signer, SigningKey, VerifyingKey};
 use tonic::transport::{Certificate, Channel, ClientTlsConfig};
 
 use crate::error::MevtonError;
@@ -42,7 +41,7 @@ impl MevtonAuth {
             AuthServiceClient::connect(url).await?
         };
 
-        let private_key = SigningKey::from_slice(private_key).map_err(Box::new)?;
+        let private_key = SigningKey::from_bytes(private_key);
         let public_key = VerifyingKey::from(&private_key);
         let key = NewKeyPair {
             private_key,
@@ -58,7 +57,7 @@ impl MevtonAuth {
     }
 
     pub async fn authenticate(&mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let bytes_public_key: &[u8] = &self.key.public_key.to_sec1_bytes();
+        let bytes_public_key: &[u8] = &self.key.public_key.to_bytes();
 
         let request = tonic::Request::new(GenerateAuthChallengeRequest {
             pubkey: Vec::from(bytes_public_key),

@@ -10,14 +10,13 @@ license = "MIT"
 
 
 [dependencies]
-k256 = "0.13.3"
 prost = "0.12"
 prost-types = "0.12"
 thiserror = "^1.0.39"
 tokio = { version = "1.38.0", features = ["rt", "macros", "sync"]   }
 tonic = {  version = "0.11.0", features = ["tls"] }
 rand_core = "0.6.4"
-
+ed25519-dalek = { version = "2.1.1"  }
 [build-dependencies]
 tonic-build = "0.11.0"
 prost-build = "0.13.3"
