@@ -65,7 +65,6 @@ impl MevtonSearcher {
                 ))?,
             );
         }
-
         let mut stream = self
             .searcher_client
             .subscribe_bundle_results(request)
