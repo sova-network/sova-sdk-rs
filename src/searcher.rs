@@ -8,7 +8,8 @@ use crate::proto::searcher::searcher_service_client::SearcherServiceClient;
 use crate::proto::searcher::{
     mempool_subscription, AddressSubscriptionV0, ExternalOutMessageBodyOpcodeSubscriptionV0,
     GetTipAddressesRequest, GetTipAddressesResponse, InternalMessageBodyOpcodeSubscriptionV0,
-    MempoolSubscription, SendBundleResponse, WorkchainShardSubscriptionV0, WorkchainSubscriptionV0,
+    MempoolSubscription, SendBundleResponse, SubscribeBundleResultsRequest,
+    WorkchainShardSubscriptionV0, WorkchainSubscriptionV0,
 };
 
 pub struct MevtonSearcher {
@@ -44,6 +45,38 @@ impl MevtonSearcher {
 
     pub fn set_access_token(&mut self, token: Token) {
         self.access_token = Some(token);
+    }
+
+    pub async fn subscribe_bundle_results<F>(
+        &mut self,
+        on_data: F,
+    ) -> Result<(), Box<dyn std::error::Error>>
+    where
+        F: Fn(proto::searcher::BundleResult) + Send + 'static,
+    {
+        let mut request = tonic::Request::new(SubscribeBundleResultsRequest {});
+
+        if let Some(access_token) = &self.access_token {
+            request.metadata_mut().insert(
+                "authorization",
+                tonic::metadata::MetadataValue::from_str(&format!(
+                    "Bearer {}",
+                    access_token.value
+                ))?,
+            );
+        }
+        let mut stream = self
+            .searcher_client
+            .subscribe_bundle_results(request)
+            .await?
+            .into_inner();
+        tokio::spawn(async move {
+            while let Some(response) = stream.message().await.unwrap_or(None) {
+                on_data(response);
+            }
+        });
+
+        Ok(())
     }
 
     pub async fn subscribe<F>(
