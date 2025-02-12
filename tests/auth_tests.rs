@@ -1,8 +1,8 @@
 use tonic::Response;
 
-use mevton_rs::auth::MevtonAuth;
-use mevton_rs::proto::auth::auth_service_server::{AuthService, AuthServiceServer};
-use mevton_rs::proto::auth::{
+use sova_sdk_rs::auth::SovaAuth;
+use sova_sdk_rs::proto::auth::auth_service_server::{AuthService, AuthServiceServer};
+use sova_sdk_rs::proto::auth::{
     GenerateAuthChallengeRequest, GenerateAuthChallengeResponse, GenerateAuthTokensRequest,
     GenerateAuthTokensResponse, RefreshAccessTokenRequest, RefreshAccessTokenResponse, Token,
 };
@@ -81,8 +81,8 @@ async fn test_authenticate() -> Result<(), Box<dyn std::error::Error>> {
     ];
     // A dummy key, replace with real one for actual tests
 
-    // Create MevtonAuth instance
-    let mut auth = MevtonAuth::new("http://[::1]:50051", None, None, &private_key_bytes).await?;
+    // Create SovaAuth instance
+    let mut auth = SovaAuth::new("http://[::1]:50051", None, None, &private_key_bytes).await?;
 
     // Test authenticate function
     auth.authenticate().await?;

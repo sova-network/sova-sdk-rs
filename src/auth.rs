@@ -1,7 +1,7 @@
 use ed25519_dalek::{Signature, Signer, SigningKey, VerifyingKey};
 use tonic::transport::{Certificate, Channel, ClientTlsConfig};
 
-use crate::error::MevtonError;
+use crate::error::SovaError;
 use crate::proto::auth::auth_service_client::AuthServiceClient;
 use crate::proto::auth::Token;
 use crate::proto::auth::{
@@ -13,14 +13,14 @@ pub struct NewKeyPair {
     public_key: VerifyingKey,
 }
 
-pub struct MevtonAuth {
+pub struct SovaAuth {
     auth_client: AuthServiceClient<Channel>,
     key: NewKeyPair,
     access_token: Option<Token>,
     refresh_token: Option<Token>,
 }
 
-impl MevtonAuth {
+impl SovaAuth {
     pub async fn new(
         url: &'static str,
         ca_pem: Option<&str>,
@@ -95,7 +95,7 @@ impl MevtonAuth {
             return Ok(());
         }
 
-        Err(Box::from(MevtonError::AuthenticationRequired))
+        Err(Box::from(SovaError::AuthenticationRequired))
     }
 
     pub fn access_token(&self) -> Option<Token> {
