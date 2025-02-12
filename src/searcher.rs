@@ -12,12 +12,12 @@ use crate::proto::searcher::{
     WorkchainShardSubscriptionV0, WorkchainSubscriptionV0,
 };
 
-pub struct MevtonSearcher {
+pub struct SovaSearcher {
     searcher_client: SearcherServiceClient<Channel>,
     access_token: Option<Token>,
 }
 
-impl MevtonSearcher {
+impl SovaSearcher {
     pub async fn new(
         url: &'static str,
         ca_pem: Option<&str>,

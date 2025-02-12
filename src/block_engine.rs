@@ -9,12 +9,12 @@ use crate::proto::block_engine::block_engine_validator_client::BlockEngineValida
 use crate::proto::block_engine::SubscribeBundlesRequest;
 use crate::proto::dto::MempoolPacket;
 
-pub struct MevtonBlockEngine {
+pub struct SovaBlockEngine {
     block_engine_client: BlockEngineValidatorClient<Channel>,
     access_token: Option<Token>,
 }
 
-impl MevtonBlockEngine {
+impl SovaBlockEngine {
     pub async fn new(
         url: &'static str,
         ca_pem: Option<&str>,

@@ -1,11 +1,11 @@
 [package]
-name = "mevton_rs"
+name = "sova_sdk_rs"
 version = "0.0.1"
 edition = "2021"
-description = "Mevton SDK for interacting with Block Engine and Searcher services"
+description = "Sova SDK for interacting with Block Engine and Searcher services"
 authors = ["A <a@mevton.com>"]
-repository = "https://github.com/mevton-labs/mevton-sdk-rs.git"
-homepage = "https://github.com/mevton-labs/mevton-sdk-rs"
+repository = "https://github.com/sova-network/sova-sdk-rs.git"
+homepage = "https://github.com/sova-network/sova-sdk-rs"
 license = "MIT"
 
 

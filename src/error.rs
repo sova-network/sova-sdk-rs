@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum MevtonError {
+pub enum SovaError {
     #[error("Authentication is required.")]
     AuthenticationRequired,
 }
