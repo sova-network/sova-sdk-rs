@@ -67,7 +67,7 @@ impl SovaBlockEngine {
         on_data: F,
     ) -> Result<(), Box<dyn std::error::Error>>
     where
-        F: Fn(proto::dto::Bundle) + Send + 'static,
+        F: Fn(proto::dto::ValidatorBundle) + Send + 'static,
     {
         let mut request = tonic::Request::new(SubscribeBundlesRequest {});
 
