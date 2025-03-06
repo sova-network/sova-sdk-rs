@@ -1,5 +1,3 @@
-use std::fs;
-
 use crate::auth::SovaAuth;
 use crate::pem::TESTNET_CA_PEM;
 use crate::proto::auth::Token;
