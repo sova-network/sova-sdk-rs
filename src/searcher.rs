@@ -12,6 +12,11 @@ use crate::proto::searcher::{
     WorkchainShardSubscriptionV0, WorkchainSubscriptionV0,
 };
 
+pub use crate::proto::{
+    dto::{Bundle, ExternalMessage},
+    searcher::{bundle_result, bundle_result_auction_failed, bundle_result_interrupted},
+};
+
 pub struct SovaSearcher {
     searcher_client: SearcherServiceClient<Channel>,
     access_token: Option<Token>,
@@ -22,6 +27,20 @@ impl SovaSearcher {
         url: &'static str,
         ca_pem: Option<&str>,
         domain_name: Option<&str>,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        Self::new_with_access_token(
+            url,
+            ca_pem,
+            domain_name,
+            None
+        ).await
+    }
+
+    pub async fn new_with_access_token(
+        url: &'static str,
+        ca_pem: Option<&str>,
+        domain_name: Option<&str>,
+        access_token: Option<Token>,
     ) -> Result<Self, Box<dyn std::error::Error>> {
         let searcher_client = if let (Some(ca_pem), Some(domain_name)) = (ca_pem, domain_name) {
             let ca = Certificate::from_pem(ca_pem);
@@ -39,7 +58,7 @@ impl SovaSearcher {
 
         Ok(Self {
             searcher_client,
-            access_token: None,
+            access_token,
         })
     }
 
