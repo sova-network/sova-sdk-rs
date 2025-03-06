@@ -7,7 +7,7 @@ pub struct SovaClient {
     url: String,
     ca_pem: String,
     domain_name: String,
-    auth_token: Option<Token>
+    auth_token: Option<Token>,
 }
 
 impl SovaClient {
@@ -32,12 +32,7 @@ impl SovaClient {
         )
     }
 
-    pub fn custom(
-        url: &str,
-        ca_pem: &str,
-        domain_name: &str,
-        auth_token: Option<Token>,
-    ) -> Self {
+    pub fn custom(url: &str, ca_pem: &str, domain_name: &str, auth_token: Option<Token>) -> Self {
         Self {
             url: url.to_owned(),
             ca_pem: ca_pem.to_owned(),
@@ -56,11 +51,12 @@ impl SovaClient {
             Some(&self.domain_name),
             &private_key,
         )
-            .await?;
+        .await?;
 
         auth.authenticate().await?;
 
-        let token = auth.access_token()
+        let token = auth
+            .access_token()
             .ok_or("Authentication failed: missing access token")?;
 
         self.auth_token = Some(token.clone());
@@ -68,15 +64,13 @@ impl SovaClient {
         Ok(token)
     }
 
-    pub async fn searcher(
-        &self,
-    ) -> Result<SovaSearcher, Box<dyn std::error::Error>> {
+    pub async fn searcher(&self) -> Result<SovaSearcher, Box<dyn std::error::Error>> {
         SovaSearcher::new_with_access_token(
             Box::leak(self.url.clone().into_boxed_str()),
             Some(&self.ca_pem),
             Some(&self.domain_name),
             self.auth_token.clone(),
         )
-            .await
+        .await
     }
 }

@@ -28,12 +28,7 @@ impl SovaSearcher {
         ca_pem: Option<&str>,
         domain_name: Option<&str>,
     ) -> Result<Self, Box<dyn std::error::Error>> {
-        Self::new_with_access_token(
-            url,
-            ca_pem,
-            domain_name,
-            None
-        ).await
+        Self::new_with_access_token(url, ca_pem, domain_name, None).await
     }
 
     pub async fn new_with_access_token(
