@@ -3,7 +3,7 @@ use crate::pem::TESTNET_CA_PEM;
 use crate::proto::auth::Token;
 use crate::searcher::SovaSearcher;
 
-struct SovaClient {
+pub struct SovaClient {
     url: String,
     ca_pem: String,
     domain_name: String,
