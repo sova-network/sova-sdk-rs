@@ -12,6 +12,11 @@ use crate::proto::searcher::{
     WorkchainShardSubscriptionV0, WorkchainSubscriptionV0,
 };
 
+pub use crate::proto::{
+    dto::{Bundle, ExternalMessage},
+    searcher::{bundle_result, bundle_result_auction_failed, bundle_result_interrupted},
+};
+
 pub struct SovaSearcher {
     searcher_client: SearcherServiceClient<Channel>,
     access_token: Option<Token>,
