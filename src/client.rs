@@ -15,8 +15,13 @@ impl SovaClient {
         Self::mainnet_with_auth(None)
     }
 
-    pub fn mainnet_with_auth(_auth_token: Option<Token>) -> Self {
-        panic!("Not released");
+    pub fn mainnet_with_auth(auth_token: Option<Token>) -> Self {
+        Self::custom(
+            "https://engine.sova.network:30020",
+            TESTNET_CA_PEM,
+            "engine.sova.network",
+            auth_token,
+        )
     }
 
     pub fn testnet() -> Self {
