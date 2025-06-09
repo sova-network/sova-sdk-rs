@@ -1,6 +1,6 @@
 [package]
 name = "sova_sdk_rs"
-version = "0.0.2"
+version = "0.0.3"
 edition = "2021"
 description = "Sova SDK for interacting with Block Engine and Searcher services"
 authors = ["A <a@mevton.com>"]
