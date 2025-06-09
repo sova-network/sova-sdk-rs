@@ -1,5 +1,5 @@
 use crate::auth::SovaAuth;
-use crate::pem::TESTNET_CA_PEM;
+use crate::pem::{TESTNET_CA_PEM, MAINNET_CA_PEM};
 use crate::proto::auth::Token;
 use crate::searcher::SovaSearcher;
 
@@ -18,7 +18,7 @@ impl SovaClient {
     pub fn mainnet_with_auth(auth_token: Option<Token>) -> Self {
         Self::custom(
             "https://engine.sova.network:30020",
-            TESTNET_CA_PEM,
+            MAINNET_CA_PEM,
             "engine.sova.network",
             auth_token,
         )
